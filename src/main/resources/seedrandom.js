@@ -125,6 +125,9 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+
+goog.provide("math.seedrandom");
+
 /**
  * All code is in an anonymous closure to keep the global namespace clean.
  */
