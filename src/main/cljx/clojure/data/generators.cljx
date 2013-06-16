@@ -8,18 +8,60 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns ^{:author "Stuart Halloway"
-      :doc "Data generators for Clojure."}
+      :doc "Data generators for Clojure[Script]."}
   clojure.data.generators
   (:refer-clojure :exclude [byte char long int short float double boolean string symbol keyword list vec set hash-map name rand-nth byte-array boolean-array short-array char-array int-array long-array float-array double-array shuffle bigint bigdec])
-  (:require [clojure.core :as core]))
+  ^:clj (:require [clojure.core :as core])
+  ^:cljs (:require [cljs.core :as core]
+                   math.seedrandom))
 
+(defprotocol IRandom
+  (-nextDouble [this])
+  (-nextFloat [this])
+  (-nextInt [this])
+  (-nextLong [this])
+  (-nextBoolean [this]))
+
+^:clj
+(extend-type java.util.Random
+  IRandom
+  (-nextDouble [this] (.nextDouble this))
+  (-nextFloat [this] (.nextFloat this))
+  (-nextInt [this] (.nextInt this))
+  (-nextLong [this] (.nextLong this))
+  (-nextBoolean [this] (.nextBoolean this)))
+
+(defn- ^:cljs between
+  [random low high]
+  (+ low (* (random) (- high low))))
+
+^:cljs
+(deftype SeedableRandom [random-double]
+  IRandom
+  (-nextDouble [this] (random-double))
+  (-nextFloat [this] (random-double))
+  ; imprecise, but should be reliably so
+  (-nextInt [this] (between random-double -2147483648 2147483647))
+  (-nextLong [this] (between random-double -9007199254740992 9007199254740992))
+  (-nextBoolean [this] (zero? (Math/floor (* 2 (random-double))))))
+
+^:clj
 (set! *warn-on-reflection* true)
 
-(def ^:dynamic ^java.util.Random
+(defn rng
+  [seed]
+  ^:clj (java.util.Random. seed)
+  ^:cljs (let [actual-seed (Math/seedrandom (str seed))
+               ; seedrandom bashes out Math/random; capture it so we can have
+               ; multiple RNGs floating about if people are so inclined
+               random Math/random]
+           (SeedableRandom. random)))
+
+(def ^:dynamic
      *rnd*
-     "Random instance for use in generators. By consistently using this
+     "IRandom instance for use in generators. By consistently using this
 instance you can get a repeatable basis for tests."
-     (java.util.Random. 42))
+     (rng 42))
 
 (defn- call-through
   "Recursively call x until it doesn't return a function."
@@ -39,25 +81,25 @@ instance you can get a repeatable basis for tests."
 (defn geometric
   "Geometric distribution with mean 1/p."
   ^long [p]
-  (core/long (Math/ceil (/ (Math/log (.nextDouble *rnd*))
+  (core/long (Math/ceil (/ (Math/log (-nextDouble *rnd*))
                            (Math/log (- 1.0 p))))))
 
 (defn uniform
   "Uniform distribution from lo (inclusive) to high (exclusive).
    Defaults to range of Java long."
-  (^long [] (.nextLong *rnd*))
+  (^long [] (-nextLong *rnd*))
   (^long[lo hi] {:pre [(< lo hi)]}
-         (clojure.core/long (Math/floor (+ lo (* (.nextDouble *rnd*) (- hi lo)))))))
+         (clojure.core/long (Math/floor (+ lo (* (-nextDouble *rnd*) (- hi lo)))))))
 
 (defn float
   "Generate af float between 0 and 1 based on *rnd*"
   ^double []
-  (.nextFloat *rnd*))
+  (-nextFloat *rnd*))
 
 (defn double
   "Generate a double between 0 and 1 based on *rnd*."
   ^double []
-  (.nextDouble *rnd*))
+  (-nextDouble *rnd*))
 
 (defn rand-nth
   "Replacement of core/rand-nth that allows control of the
@@ -93,6 +135,7 @@ instance you can get a repeatable basis for tests."
   "Returns a long based on *rnd*. Same as uniform."
   uniform)
 
+^:clj
 (defn ratio
   "Generate a ratio, with numerator and denominator uniform longs
    or as specified"
@@ -102,22 +145,22 @@ instance you can get a repeatable basis for tests."
 (defn int
   []
   "Returns a long based on *rnd* in the int range."
-  (uniform Integer/MIN_VALUE (inc Integer/MAX_VALUE)))
+  (uniform -2147483648 2147483648))
 
 (defn short
   []
   "Returns a long based on *rnd* in the short range."
-  (uniform Short/MIN_VALUE (inc (core/long Short/MAX_VALUE))))
+  (uniform -32768 32768))
 
 (defn byte
   "Returns a long based on *rnd* in the byte range."
   ^long []
-  (uniform Byte/MIN_VALUE (inc (core/int Byte/MAX_VALUE))))
+  (uniform -128 128))
 
 (defn boolean
   "Returns a bool based on *rnd*."
   []
-  (.nextBoolean *rnd*))
+  (-nextBoolean *rnd*))
 
 (defn printable-ascii-char
   "Returns a char based on *rnd* in the printable ascii range."
@@ -141,6 +184,8 @@ instance you can get a repeatable basis for tests."
   ([f sizer]
      (reps sizer f)))
 
+;; primitive array generators only available on JVM (TODO for now...?)
+^:clj
 (defmacro primitive-array
   [type]
   (let [fn-name (core/symbol (str type "-array"))
@@ -156,10 +201,12 @@ instance you can get a repeatable basis for tests."
               (aset ~'arr ~'i (~cast-name (call-through ~'f))))
             ~'arr)))))
 
+^:clj
 (defmacro primitive-arrays
   [types]
   `(do ~@(map (fn [type] `(primitive-array ~type)) types)))
 
+^:clj
 (primitive-arrays ["byte" "short" "long" "char" "double" "float" "int" "boolean"])
 
 #_(defn byte-array
@@ -172,6 +219,7 @@ instance you can get a repeatable basis for tests."
            arr)))
 
 ;; TODO: sensible default distributions for bigint, bigdec
+^:clj ;; TODO: add support for bignums if bignumber.js is around
 (defn bigint
   ^clojure.lang.BigInt []
   (loop []
@@ -180,6 +228,7 @@ instance you can get a repeatable basis for tests."
              (catch NumberFormatException e :retry))]
       (if (= i :retry) (recur) (core/bigint i)))))
 
+^:clj
 (defn bigdec
   []
   (BigDecimal. (.toBigInteger (bigint)) (geometric 0.01)))
@@ -252,14 +301,26 @@ instance you can get a repeatable basis for tests."
 (defn uuid
   "Create a UUID based on uniform distribution of low and high parts."
   []
-  (java.util.UUID. (long) (long)))
+  ^:clj (java.util.UUID. (long) (long))
+  ; the stupidest possible UUID generator...ever
+  ^:cljs (let [hex-char (comp core/char #(rand-nth [48 49 50 51 52 53 54 55
+                                                    56 57 97 98 99 100 101 102]))]
+           (cljs.core.UUID. (->> [(string hex-char 8) "-"
+                                  (string hex-char 4) "-"
+                                  (string hex-char 4) "-"
+                                  (string hex-char 4) "-"
+                                  (string hex-char 12)]
+                                 (apply concat)
+                                 (apply str)))))
 
 (defn date
   "Create a date with geoemetric mean around base. Defaults to
    #inst \"2007-10-16T00:00:00.000-00:00\""
   ([] (date #inst "2007-10-16T00:00:00.000-00:00"))
-  ([^java.util.Date base]
-     (java.util.Date. (geometric (/ 1 (.getTime base))))))
+  ([base]
+     (^:clj java.util.Date.
+      ^:cljs js.Date.
+      (geometric (/ 1 (.getTime ^java.util.Date base))))))
 
 (def scalars
   [(constantly nil)
@@ -272,9 +333,9 @@ instance you can get a repeatable basis for tests."
    keyword
    uuid
    date
-   ratio
-   bigint
-   bigdec])
+   ^:clj ratio
+   ^:clj bigint
+   ^:clj bigdec])
 
 (defn scalar
   "Returns a scalar based on *rnd*."
