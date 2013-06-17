@@ -51,6 +51,8 @@
                    :plugins [[org.clojars.cemerick/cljx "0.2.3-SNAPSHOT"]
                              ; temp fix https://github.com/emezeske/lein-cljsbuild/issues/210
                              [org.clojars.cemerick/lein-cljsbuild "0.3.2.1"]]
+                   :aliases {"cleantest" ["do" "clean," "cljx" "once," "test,"
+                                          "cljsbuild" "once," "cljsbuild" "test"]}
                    :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl
                                                      cljx.repl-middleware/wrap-cljx]}
                    :injections [(require '[cljs.repl.browser :refer (exec-env)]
