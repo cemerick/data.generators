@@ -1,6 +1,6 @@
 (defproject com.cemerick/data.generators "0.1.2-1"
   :jar-exclusions [#"\.cljx|\.swp|\.swo|\.DS_Store"]
-  :source-paths ["src/main/cljx"]
+  :source-paths ["src/main/cljx" "src/main/clj"]
   :resource-paths ["src/main/resources"]
   :test-paths ["src/test/clojure" "src/test/cljs"]
   :dependencies [[org.clojure/clojure "1.5.1"]
@@ -21,11 +21,10 @@
                    :maintain-form-position true
                    :rules cljx.rules/cljs-rules}]}
 
-  ; TODO cljsbuild busted due to https://github.com/emezeske/lein-cljsbuild/issues/210
   :cljsbuild {:test-commands {"phantom" ["runners/phantomjs.js" "target/testable.js"]}
-              :builds [{:source-paths ["target/classes" "src/main/resources"]
+              :builds [{:source-paths ["target/classes" "src/main/resources" "src/main/clj"]
                         :compiler {:output-to "target/testable.js"
-                                   :libs ["src/main/resources/seedrandom.js"]
+                                   :libs ["seedrandom.js"]
                                    ; TODO test with advanced optimization
                                    :optimizations :whitespace
                                    :pretty-print true}}]}
@@ -34,7 +33,8 @@
                                   [com.cemerick/piggieback "0.0.5-SNAPSHOT"]
                                   [org.clojars.cemerick/cljx "0.2.3-SNAPSHOT"]]
                    :plugins [[org.clojars.cemerick/cljx "0.2.3-SNAPSHOT"]
-                             [lein-cljsbuild "0.3.2"]]
+                             ; temp fix https://github.com/emezeske/lein-cljsbuild/issues/210
+                             [org.clojars.cemerick/lein-cljsbuild "0.3.2.1"]]
                    :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl
                                                      cljx.repl-middleware/wrap-cljx]}
                    :injections [(require '[cljs.repl.browser :refer (exec-env)]

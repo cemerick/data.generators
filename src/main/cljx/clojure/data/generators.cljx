@@ -7,11 +7,11 @@
 ;   the terms of this license.
 ;   You must not remove this notice, or any other, from this software.
 
-(ns ^{:author "Stuart Halloway"
-      :doc "Data generators for Clojure[Script]."}
+(ns ^{:author "Stuart Halloway" :doc "Data generators for Clojure[Script]."}
   clojure.data.generators
   (:refer-clojure :exclude [byte char long int short float double boolean string symbol keyword list vec set hash-map name rand-nth byte-array boolean-array short-array char-array int-array long-array float-array double-array shuffle bigint bigdec])
-  ^:clj (:require [clojure.core :as core])
+  ^:clj (:require [clojure.core :as core]
+                  [clojure.data.generators.macros :refer :all])
   ^:cljs (:require [cljs.core :as core]
                    math.seedrandom))
 
@@ -185,27 +185,6 @@ instance you can get a repeatable basis for tests."
      (reps sizer f)))
 
 ;; primitive array generators only available on JVM (TODO for now...?)
-^:clj
-(defmacro primitive-array
-  [type]
-  (let [fn-name (core/symbol (str type "-array"))
-        factory-name (core/symbol (str "core/" fn-name))
-        cast-name (core/symbol (str "core/" type))]
-    `(defn ~fn-name
-       "Create an array with elements from f and sized from sizer."
-       ([~'f]
-          (~fn-name ~'f default-sizer))
-       ([~'f ~'sizer]
-          (let [~'arr (~factory-name (call-through ~'sizer))]
-            (dotimes [~'i (count ~'arr)]
-              (aset ~'arr ~'i (~cast-name (call-through ~'f))))
-            ~'arr)))))
-
-^:clj
-(defmacro primitive-arrays
-  [types]
-  `(do ~@(map (fn [type] `(primitive-array ~type)) types)))
-
 ^:clj
 (primitive-arrays ["byte" "short" "long" "char" "double" "float" "int" "boolean"])
 
