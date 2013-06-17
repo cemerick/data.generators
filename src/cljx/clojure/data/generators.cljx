@@ -340,7 +340,8 @@ instance you can get a repeatable basis for tests."
 (defn ^:private fisher-yates
   "http://en.wikipedia.org/wiki/Fisher–Yates_shuffle#The_modern_algorithm"
   [coll]
-  (let [as (object-array coll)]
+  ; TODO pending http://dev.clojure.org/jira/browse/CLJS-524
+  (let [as (object-array (or (seq coll) '()))]
     (loop [i (dec (count as))]
       (if (<= 1 i)
         (let [j (uniform 0 (inc i))
