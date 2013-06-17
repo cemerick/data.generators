@@ -41,14 +41,8 @@
                                          '[cemerick.piggieback :refer (cljs-repl)])
                                 (defn browser-repl []
                                   (cljs-repl :repl-env
-                                    (doto (exec-env)
-                                      ; TODO https://github.com/cemerick/piggieback/issues/10
-                                      cljs.repl/-setup
-                                      ; TODO is there no way to get libs recognized
-                                      ; by cljs REPLs? Struggled with it for too
-                                      ; long, thus this:
-                                      (cljs.repl/-evaluate
-                                        "src/main/resources/seedrandom.js"
-                                        0
-                                        (slurp "src/main/resources/seedrandom.js")))))]}})
+                                             ; requires fix for http://dev.clojure.org/jira/browse/CLJS-521
+                                             (doto (exec-env :libs ["seedrandom.js"])
+                                               ; TODO https://github.com/cemerick/piggieback/issues/10
+                                               cljs.repl/-setup)))]}})
 
