@@ -25,7 +25,7 @@ suffixed classifier (e.g. `0.1.2` turns into `0.1.2-1`) to indicate changes
 here.  Eventually, it would be nice to get this work folded in upstream, but the
 nuclear-bleeding edge nature of portable Clojure[Script] API development and
 current toolchain restrictions of Clojure contrib mean that keeping it separate
-for now.
+for now makes sense.
 
 Releases and Dependency Information
 ========================================

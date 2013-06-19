@@ -8,33 +8,19 @@
 
   :cljx {:builds [{:source-paths ["src/cljx"]
                    :output-path "target/classes"
-                   :include-meta true
-                   :nested-exclusions true
-                   :maintain-form-position true
-                   :rules cljx.rules/clj-rules}
+                   :rules :clj}
 
                   {:source-paths ["src/cljx"]
                    :output-path "target/classes"
-                   :extension "cljs"
-                   :include-meta true
-                   :nested-exclusions true
-                   :maintain-form-position true
-                   :rules cljx.rules/cljs-rules}
+                   :rules :cljs}
 
                   {:source-paths ["test/cljx"]
                    :output-path "target/test-classes"
-                   :include-meta true
-                   :nested-exclusions true
-                   :maintain-form-position true
-                   :rules cljx.rules/clj-rules}
+                   :rules :clj}
 
                   {:source-paths ["test/cljx"]
                    :output-path "target/test-classes"
-                   :extension "cljs"
-                   :include-meta true
-                   :nested-exclusions true
-                   :maintain-form-position true
-                   :rules cljx.rules/cljs-rules}]}
+                   :rules :cljs}]}
 
   :cljsbuild {:test-commands {"phantom" ["runners/phantomjs.js" "target/testable.js"]}
               :builds [{:source-paths ["target/classes" "target/test-classes"
@@ -47,8 +33,8 @@
 
   :profiles {:dev {:dependencies [[com.cemerick/clojurescript.test "0.0.4"]
                                   [com.cemerick/piggieback "0.0.5-SNAPSHOT"]
-                                  [org.clojars.cemerick/cljx "0.2.3-SNAPSHOT"]]
-                   :plugins [[org.clojars.cemerick/cljx "0.2.3-SNAPSHOT"]
+                                  [org.clojars.cemerick/cljx "0.3.0-SNAPSHOT"]]
+                   :plugins [[org.clojars.cemerick/cljx "0.3.0-SNAPSHOT"]
                              ; temp fix https://github.com/emezeske/lein-cljsbuild/issues/210
                              [org.clojars.cemerick/lein-cljsbuild "0.3.2.1"]]
                    :aliases {"cleantest" ["do" "clean," "cljx" "once," "test,"
