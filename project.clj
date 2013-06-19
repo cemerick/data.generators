@@ -26,7 +26,7 @@
               :builds [{:source-paths ["target/classes" "target/test-classes"
                                        "src/resources" "src/clj"]
                         :compiler {:output-to "target/testable.js"
-                                   :libs ["seedrandom.js"]
+                                   :libs [""]
                                    ; TODO test with advanced optimization
                                    :optimizations :advanced
                                    :pretty-print true}}]}
@@ -46,7 +46,7 @@
                                 (defn browser-repl []
                                   (cljs-repl :repl-env
                                              ; requires fix for http://dev.clojure.org/jira/browse/CLJS-521
-                                             (doto (exec-env :libs ["seedrandom.js"])
+                                             (doto (exec-env :libs [""])
                                                ; TODO https://github.com/cemerick/piggieback/issues/10
                                                cljs.repl/-setup)))]}})
 
