@@ -16,6 +16,7 @@
                    math.seedrandom))
 
 (defprotocol IRandom
+  (-seed [this])
   (-nextDouble [this])
   (-nextFloat [this])
   (-nextInt [this])
@@ -23,13 +24,13 @@
   (-nextBoolean [this]))
 
 #+clj
-(extend-type java.util.Random
+(defrecord SeededRandom [seed ^java.util.Random rng]
   IRandom
-  (-nextDouble [this] (.nextDouble this))
-  (-nextFloat [this] (.nextFloat this))
-  (-nextInt [this] (.nextInt this))
-  (-nextLong [this] (.nextLong this))
-  (-nextBoolean [this] (.nextBoolean this)))
+  (-nextDouble [this] (.nextDouble rng))
+  (-nextFloat [this] (.nextFloat rng))
+  (-nextInt [this] (.nextInt rng))
+  (-nextLong [this] (.nextLong rng))
+  (-nextBoolean [this] (.nextBoolean rng)))
 
 #+cljs
 (defn- between
@@ -37,7 +38,7 @@
   (+ low (* (random) (- high low))))
 
 #+cljs
-(deftype SeedableRandom [random-double]
+(defrecord SeedableRandom [seed random-double]
   IRandom
   (-nextDouble [this] (random-double))
   (-nextFloat [this] (random-double))
@@ -50,13 +51,15 @@
 (set! *warn-on-reflection* true)
 
 (defn rng
+  "Returns a new random number generator that can be bound to *rnd*, seeded with
+  [seed], which should be an integer."
   [seed]
-  #+clj (java.util.Random. seed)
-  #+cljs (let [actual-seed (Math/seedrandom (str seed))
-               ; seedrandom bashes out Math/random; capture it so we can have
-               ; multiple RNGs floating about if people are so inclined
-               random Math/random]
-           (SeedableRandom. random)))
+  #+clj (SeededRandom. seed (java.util.Random. seed))
+  #+cljs (do
+           (Math/seedrandom seed)
+           ; seedrandom bashes out Math/random; capture it so we can have
+           ; multiple RNGs floating about if people are so inclined
+           (SeedableRandom. seed Math/random)))
 
 (def ^:dynamic
      *rnd*
