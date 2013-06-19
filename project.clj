@@ -28,7 +28,7 @@
                         :compiler {:output-to "target/testable.js"
                                    :libs ["seedrandom.js"]
                                    ; TODO test with advanced optimization
-                                   :optimizations :whitespace
+                                   :optimizations :advanced
                                    :pretty-print true}}]}
 
   :profiles {:dev {:dependencies [[com.cemerick/clojurescript.test "0.0.4"]

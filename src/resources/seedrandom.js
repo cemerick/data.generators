@@ -127,6 +127,8 @@
 //
 
 goog.provide("math.seedrandom");
+/** @expose Math.seedrandom for Google Closure advanced compilation */
+Math.seedrandom = null;
 
 /**
  * All code is in an anonymous closure to keep the global namespace clean.
